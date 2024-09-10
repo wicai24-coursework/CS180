@@ -10,4 +10,4 @@ Steps:
 
 
 Install dependencies:
-Run - pip install numpy scikit-image opencv-python tqdm
+Run ```pip install numpy scikit-image opencv-python tqdm```
