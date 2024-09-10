@@ -10,4 +10,8 @@ Steps:
 
 
 Install dependencies:
-Run ```pip install numpy scikit-image opencv-python tqdm```
+Run 
+
+```
+Look! You can see my backticks.
+```
