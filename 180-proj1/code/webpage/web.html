@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>FA24 CS180 Project 1</title>
+    <link rel="icon" type="image/png" href="rgb.png">
+    <style>
+        a {
+            color: #4fd1c5;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #202123;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #10a37f;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .example {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .example p {
+            flex: 1;
+            font-size: 18px;
+            margin-right: 20px;
+        }
+
+        .example img {
+            max-width: 300px;
+        }
+        .image-container {
+            display: flex: 0 0 auto;
+            flex-direction: column;
+            align-items: center;
+            max-height: 100%;
+        }
+
+        .image-description {
+            color: #aaa;
+            text-align: center;
+            margin-top: 5px;
+            max-width: 300px;
+        }
+        .displacement{
+            color: gray;
+            font-size:12px;
+            margin-top: 2px;
+            line-height: 1;
+        }
+        .example .image-description {
+          font-size: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #10a37f;
+            color: #ffffff;
+        }
+        td img {
+            max-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 1: Images of the Russian Empire -- Colorizing the Prokudin-Gorskii Photo Collection</h1>
+    
+    <div class="section">
+        <h2>Background</h2>
+        <div class="example">
+            <p><a href="url"> Sergei Mikhailovich Prokudin-Gorskii </a> (1863-1944) [Сергей Михайлович Прокудин-Горский, to his Russian friends] was a man well ahead of his time. Convinced, as early as 1907, that color photography was the wave of the future, he won Tzar's special permission to travel across the vast Russian Empire and take color photographs of everything he saw including the only color portrait of Leo Tolstoy. And he really photographed everything: people, buildings, landscapes, railroads, bridges... thousands of color pictures! His idea was simple: record three exposures of every scene onto a glass plate using a red, a green, and a blue filter. Never mind that there was no way to print color photographs until much later -- he envisioned special projectors to be installed in "multimedia" classrooms all across Russia where the children would be able to learn about their vast country. Alas, his plans never materialized: he left Russia in 1918, right after the revolution, never to return again. Luckily, his RGB glass plate negatives, capturing the last years of the Russian Empire, survived and were purchased in 1948 by the Library of Congress. The LoC has recently digitized the negatives and made them available on-line.
+                <br></br>
+            In this project, I will take the digitized Prokudin-Gorskii glass plate images and, using image processing techniques, automatically produce a color image with as few visual artifacts as possible. In order to do this, I will extract the three color channel images, place them on top of each other, and align them so that they form a single RGB color image. A cool explanation on how the Library of Congress created the color images on their site is available <a href="https://www.loc.gov/exhibits/empire/making.html">here </a>.</p>
+            <div class="image-container">
+            <img src="data/cathedral.jpg" alt="Unprocessed image">
+            <p class="image-description">Unprocessed image of a cathedral from Prokudin-Gorskii's collection</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+    <h2>Alignment Methods</h2>
+    <h3>Single Scale Alignment</h3>
+    <div class="example">
+        <p>This method aligns the color channels of the image using a window-based search approach (default to window size of 15). It computes the structural similarity index (SSIM) between the target channel (blue) and other channels (green or red) within the window size. The algorithm iterates through all possible displacements, calculating the SSIM score for each. The displacement vector yielding the highest SSIM score is selected. The final aligned image is produced by applying this best displacement vector using NumPy's roll function. </p>
+        <div class="image-container">
+            <img src="output/aligned_cathedral.jpg" alt="Alignment example">
+            <p class="image-description">Single scale alignment for the cathedral</p>
+        </div>
+    </div>
+    <h3>Pyramid Alignment</h3>
+    <div class="example">
+        <p>This pyramid approach uses image pyramids to handle larger image efficiently. It starts by downscaling the image to the coarsest level, which the minimum dimension is under 200 pixels. The algorithm then applies the single-scale alignment at this coarse level and it recursively refines the alignment by doubling the image size at each step, using the previous level's displacement as an initial estimate. The search window is reduced at finer levels by a factor of 2. This process continues until reaching the original image resolution, and we obtained our final aligned image.</p>
+        <div class="image-container">
+            <img src="output/aligned_emir.jpg" alt="Pyramid alignment example">
+            <p class="image-description">Pyramid alignment result for the Emir
+            (<a href="#emir-original">Unprocessed Emir</a>)</p>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Additional Improvements</h2>
+    <h3>Auto Cropping</h3>
+    <div class="example">
+        <p>The auto-cropping function aims to remove unnecessary borders from the aligned image. It analyzes each color channel separately, detecting edges based on pixel intensity differences. The algorithm uses two thresholds: a pixel threshold for identifying significant changes in intensity, and a count threshold to determine if enough pixels in a row or column exhibit these changes which indicates a border. It computes the top, bottom, left, and right boundaries for each channel and selects the most inner boundaries across all channels, and the image is then cropped to these boundaries.</p>
+        <div class="image-container">
+            <img src="output_cropped/aligned_cathedral.jpg" alt="Cropping example">
+            <p class="image-description">Auto-cropped result of the cathedral</p>
+        </div>
+    </div>
+    <h3>Auto Contrast</h3>
+    <div class="example">
+        <p>This function enhances the image contrast using histogram equalization. It first converts the RGB image to the YUV color space, which gives the luminance (Y) compoent essential in equalization. The algorithm then applies histogram equalization to the Y channel using histogram equalization. The method redistributes the intensity values and stretching the histogram to cover the full range of intensities. After equalization, the image is converted back to the RGB color space.</p>
+        <div class="image-container">
+            <img src="output_contrasted/aligned_cathedral.jpg" alt="Contrast enhancement example">
+            <p class="image-description">Contrast-enhanced result of the cathedral</p>
+        </div>
+    </div>
+    <h3>Auto White Balance</h3>
+    <div class="example">
+        <p>The function uses the Gray World assumption to correct colors in the image. It first converts the RGB image to the LAB color space, which gives the lightness (L) compoent. Then it adjusts the A and B color channels based on their average values and the L channel intensity. This correction aims to manipulate the colors to counteract the illuminant and simulate a neutral illuminant. After applying the corrections, the image is converted back to the RGB color space.</p>
+        <div class="image-container">
+            <img src="output_white_balance/aligned_cathedral.jpg" alt="White balance example">
+            <p class="image-description">White-balanced result of the cathedral</p>
+        </div>
+    </div>
+</div>
+
+   <div class="section">
+    <h2>Comparison Table</h2>
+    <table>
+        <tr>
+            <th>Original</th>
+            <th>Aligned <a href="#explanations">*</a></th>
+            <th>Cropped</th>
+            <th>Contrasted</th>
+            <th>White Balanced</th>
+            <th>Final</th>
+        </tr>
+        <tr>
+            <td><img src="data/cathedral.jpg" alt="Original cathedral">
+                <p class="displacement">Cathedral</p></td>
+            <td>
+                <img src="output/aligned_cathedral.jpg" alt="Aligned cathedral">
+                <p class="displacement">Green: (2, 5), Red: (3, 12)</p>
+            </td>
+            <td><img src="output_cropped/aligned_cathedral.jpg" alt="Cropped cathedral"></td>
+            <td><img src="output_contrasted/aligned_cathedral.jpg" alt="Contrasted cathedral"></td>
+            <td><img src="output_white_balance/aligned_cathedral.jpg" alt="White Balanced cathedral"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_cathedral.jpg" alt="Final cathedral"></td>
+        </tr>
+        <tr>
+            <td><img src="data/church.jpg" alt="Original church">
+                <p class="displacement">Church</p></td>
+            <td>
+                <img src="output/aligned_church.jpg" alt="Aligned church">
+                <p class="displacement">Green: (4, 25), Red: (-4, 58)</p>
+            </td>
+            <td><img src="output_cropped/aligned_church.jpg" alt="Cropped church">
+                <p class="displacement">Cloud misclassified as border</p>
+            </td>
+            <td><img src="output_contrasted/aligned_church.jpg" alt="Contrasted church"></td>
+            <td><img src="output_white_balance/aligned_church.jpg" alt="White Balanced church"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_church.jpg" alt="Final church"></td>
+        </tr>
+        <tr>
+            <td><img src="data/emir.jpg" alt="Original emir">
+                <p class="displacement">Emir</p></td>
+            <td id="emir-original">
+                <img src="output/aligned_emir.jpg" alt="Aligned emir">
+                <p class="displacement">Green: (21, 50), Red: (40, 105)</p>
+            </td>
+            <td><img src="output_cropped/aligned_emir.jpg" alt="Cropped emir"></td>
+            <td><img src="output_contrasted/aligned_emir.jpg" alt="Contrasted emir"></td>
+            <td><img src="output_white_balance/aligned_emir.jpg" alt="White Balanced emir"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_emir.jpg" alt="Final emir"></td>
+        </tr>
+        <tr>
+            <td><img src="data/harvesters.jpg" alt="Original harvesters">
+                <p class="displacement">Harvesters</p></td>
+            <td>
+                <img src="output/aligned_harvesters.jpg" alt="Aligned harvesters">
+                <p class="displacement">Green: (14, 59), Red: (11, 122)</p>
+            </td>
+            <td><img src="output_cropped/aligned_harvesters.jpg" alt="Cropped harvesters"></td>
+            <td><img src="output_contrasted/aligned_harvesters.jpg" alt="Contrasted harvesters"></td>
+            <td><img src="output_white_balance/aligned_harvesters.jpg" alt="White Balanced harvesters"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_harvesters.jpg" alt="Final harvesters"></td>
+        </tr>
+        <tr>
+            <td><img src="data/icon.jpg" alt="Original icon">
+                <p class="displacement">Icon</p></td>
+            <td>
+                <img src="output/aligned_icon.jpg" alt="Aligned icon">
+                <p class="displacement">Green: (16, 39), Red: (23, 89)</p>
+            </td>
+            <td><img src="output_cropped/aligned_icon.jpg" alt="Cropped icon"></td>
+            <td><img src="output_contrasted/aligned_icon.jpg" alt="Contrasted icon"></td>
+            <td><img src="output_white_balance/aligned_icon.jpg" alt="White Balanced icon"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_icon.jpg" alt="Final icon"></td>
+        </tr>
+        <tr>
+            <td><img src="data/lady.jpg" alt="Original lady">
+                <p class="displacement">Lady</p></td>
+            <td>
+                <img src="output/aligned_lady.jpg" alt="Aligned lady">
+                <p class="displacement">Green: (8, 57), Red: (12, 119)</p>
+            </td>
+            <td><img src="output_cropped/aligned_lady.jpg" alt="Cropped lady">
+                <p class="displacement">Skirt misclassified as border</p></td>
+            <td><img src="output_contrasted/aligned_lady.jpg" alt="Contrasted lady"></td>
+            <td><img src="output_white_balance/aligned_lady.jpg" alt="White Balanced lady"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_lady.jpg" alt="Final lady"></td>
+        </tr>
+        <tr>
+            <td><img src="data/melons.jpg" alt="Original melons">
+                <p class="displacement">Melons</p></td>
+            <td>
+                <img src="output/aligned_melons.jpg" alt="Aligned melons">
+                <p class="displacement">Green: (10, 87), Red: (12, 178)</p>
+            </td>
+            <td><img src="output_cropped/aligned_melons.jpg" alt="Cropped melons"></td>
+            <td><img src="output_contrasted/aligned_melons.jpg" alt="Contrasted melons"></td>
+            <td><img src="output_white_balance/aligned_melons.jpg" alt="White Balanced melons"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_melons.jpg" alt="Final melons"></td>
+        </tr>
+        <tr>
+            <td><img src="data/monastery.jpg" alt="Original monastery">
+                <p class="displacement">Monasteryl</p></td>
+            <td>
+                <img src="output/aligned_monastery.jpg" alt="Aligned monastery">
+                <p class="displacement">Green: (2, -3), Red: (2, 3)</p>
+            </td>
+            <td><img src="output_cropped/aligned_monastery.jpg" alt="Cropped monastery"></td>
+            <td><img src="output_contrasted/aligned_monastery.jpg" alt="Contrasted monastery"></td>
+            <td><img src="output_white_balance/aligned_monastery.jpg" alt="White Balanced monastery"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_monastery.jpg" alt="Final monastery"></td>
+        </tr>
+        <tr>
+            <td><img src="data/onion_church.jpg" alt="Original onion church">
+                <p class="displacement">Onion Church</p></td>
+            <td>
+                <img src="output/aligned_onion_church.jpg" alt="Aligned onion church">
+                <p class="displacement">Green: (25, 52), Red: (35, 108)</p>
+            </td>
+            <td><img src="output_cropped/aligned_onion_church.jpg" alt="Cropped onion church"></td>
+            <td><img src="output_contrasted/aligned_onion_church.jpg" alt="Contrasted onion church"></td>
+            <td><img src="output_white_balance/aligned_onion_church.jpg" alt="White Balanced onion church"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_onion_church.jpg" alt="Final onion church"></td>
+        </tr>
+        <tr>
+            <td><img src="data/sculpture.jpg" alt="Original sculpture">
+                <p class="displacement">Sculpture</p></td>
+            <td>
+                <img src="output/aligned_sculpture.jpg" alt="Aligned sculpture">
+                <p class="displacement">Green: (-11, 33), Red: (-27, 140)</p>
+            </td>
+            <td><img src="output_cropped/aligned_sculpture.jpg" alt="Cropped sculpture"></td>
+            <td><img src="output_contrasted/aligned_sculpture.jpg" alt="Contrasted sculpture"></td>
+            <td><img src="output_white_balance/aligned_sculpture.jpg" alt="White Balanced sculpture"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_sculpture.jpg" alt="Final sculpture"></td>
+        </tr>
+        <tr>
+            <td><img src="data/self_portrait.jpg" alt="Original self portrait">
+                <p class="displacement">Self Portrait</p></td>
+            <td>
+                <img src="output/aligned_self_portrait.jpg" alt="Aligned self portrait">
+                <p class="displacement">Green: (28, 78), Red: (36, 175)</p>
+            </td>
+            <td><img src="output_cropped/aligned_self_portrait.jpg" alt="Cropped self portrait"></td>
+            <td><img src="output_contrasted/aligned_self_portrait.jpg" alt="Contrasted self portrait"></td>
+            <td><img src="output_white_balance/aligned_self_portrait.jpg" alt="White Balanced self portrait"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_self_portrait.jpg" alt="Final self portrait"></td>
+        </tr>
+        <tr>
+            <td><img src="data/three_generations.jpg" alt="Original three generations">
+                <p class="displacement">Three Generations</p></td>
+            <td>
+                <img src="output/aligned_three_generations.jpg" alt="Aligned three generations">
+                <p class="displacement">Green: (15, 57), Red: (9, 112)</p>
+            </td>
+            <td><img src="output_cropped/aligned_three_generations.jpg" alt="Cropped three generations"></td>
+            <td><img src="output_contrasted/aligned_three_generations.jpg" alt="Contrasted three generations"></td>
+            <td><img src="output_white_balance/aligned_three_generations.jpg" alt="White Balanced three generations"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_three_generations.jpg" alt="Final three generations"></td>
+        </tr>
+        <tr>
+            <td><img src="data/tobolsk.jpg" alt="Original tobolsk">
+                <p class="displacement">Tobolsk</p></td>
+            <td>
+                <img src="output/aligned_tobolsk.jpg" alt="Aligned tobolsk">
+                <p class="displacement">Green: (2, 3), Red: (3, 6)</p>
+            </td>
+            <td><img src="output_cropped/aligned_tobolsk.jpg" alt="Cropped tobolsk"></td>
+            <td><img src="output_contrasted/aligned_tobolsk.jpg" alt="Contrasted tobolsk"></td>
+            <td><img src="output_white_balance/aligned_tobolsk.jpg" alt="White Balanced tobolsk"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_tobolsk.jpg" alt="Final tobolsk"></td>
+        </tr>
+        <tr>
+            <td><img src="data/train.jpg" alt="Original train">
+                <p class="displacement">Train</p></td>
+            <td>
+                <img src="output/aligned_train.jpg" alt="Aligned train">
+                <p class="displacement">Green: (-1, 40), Red: (29, 85)</p>
+            </td>
+            <td><img src="output_cropped/aligned_train.jpg" alt="Cropped train"></td>
+            <td><img src="output_contrasted/aligned_train.jpg" alt="Contrasted train"></td>
+            <td><img src="output_white_balance/aligned_train.jpg" alt="White Balanced train"></td>
+            <td><img src="output_cropped_contrasted_white_balance/aligned_train.jpg" alt="Final train"></td>
+        </tr>
+    </table>
+</div>
+<div class="section" id="explanations">
+    <ol>
+        <li>The tuple after "Green:" and "Red:" is the best displacement vector used to align that channel to the target blue channel.
+        <li>Only cathedral, monastery, and tobolsk used single-scale alignment, other larger images use pyramid alignment.
+    </ol>
+</div>
+</body>
+</html>
