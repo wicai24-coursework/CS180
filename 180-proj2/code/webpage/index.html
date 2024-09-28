@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>FA24 CS180 Project 2</title>
+    <link rel="icon" type="image/png" href="rgb.png">
+    <style>
+        a {
+            color: #4fd1c5;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #202123;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #10a37f;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .example {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .example p {
+            font-size: 18px;
+            margin-right: 20px;
+            text-align: center;
+        }
+
+        .example img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .image-description {
+            color: #aaa;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #10a37f;
+            color: #ffffff;
+        }
+        td img {
+            max-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 2: Fun with Filters and Frequencies!</h1>
+    
+    <div class="example">
+        <div>
+            <p><strong>Part 1.1: Finite Difference Operator</strong></p>
+            <p>
+                This method detects edges in a grayscale image using a finite difference filter. Specifically, a horizontal filter [1, -1] and a vertical filter represented by [1, -1] transposed are applied to find intensity changes along the x and y directions. By convolving the image with these filters, we obtain the gradient values in both directions. Then, the gradient magnitude is calculated by combining these values which indicates the areas with significant changes. Finally, a threshold of 50 is applied to create a binary edge image that shows the high gradient magnitude pixels which are the edges.
+            </p>
+            <img src="data/edge.png" alt="Edge Detection Result">
+            <p class="image-description">Figure 1: Edge detection result using finite difference operator with a threshold of 50</p>
+        </div>
+    </div>
+    
+    <div class="example">
+        <div>
+            <p><strong>Part 1.2: Derivative of Gaussian (DoG) Filter</strong></p>
+            <p>
+                We noted that the results with just the difference operator were rather noisy. Luckily, we have a smoothing operator handy: the Gaussian filter G. To reduce noise, we create a blurred version of the original image by convolving it with a Gaussian filter and then repeat the procedure from Part 1.1. The observed differences include edges becoming thicker and continuous, angles appearing less sharp, and additional background edges starting to show.
+            </p>
+            <p>
+                Instead of performing two separate convolutions (Gaussian blur followed by the difference operator), we can achieve the same result (in theory) in one step by creating a DoG filter. The DoG filter is obtained by convolving the Gaussian filter with the difference operators. When DoG filters are applied directly to the original image, the resulting gradient magnitudes are very similar to the previous results; the slight differences are caused by the kernel size and padding.
+            </p>
+            <img src="data/blur.png" alt="Blur Gradient Magnitude" style="display: block; margin: 0 auto;">
+            <p class="image-description">Figure 2: Two step smoothing vs single convolution</p>
+        </div>
+    </div>    
+
+    <div class="example">
+        <div>
+            <p><strong>Part 2.1: Image "Sharpening"</strong></p>
+            <p>
+                We can add more high-frequency details to make images appear sharper! This is achieved by subtracting a Gaussian-blurred version of the image from the original, isolating the high frequencies, and then adding these high frequencies back to the original image. It can be done in a single convolution operation known as the unsharp mask filter. Below are the results of sharpening two different images.
+            </p>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <img src="data/taj.png" alt="Taj Mahal Before and After Sharpening" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 3: Taj Mahal - Before and After Sharpening</p>
+    
+                <img src="data/sather.png" alt="Sather Tower Before and After Sharpening" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 4: Sather Gate - Before and After Sharpening</p>
+            </div>
+        </div>
+    </div>
+    <div class="example">
+        <div>
+            <p><strong>Part 2.2: Hybrid Images</strong></p>
+            <p>
+                The hybrid image creation involves combining the low-frequency components of one image with the high-frequency components of another, creating an interesting blend where different features are visible depending on viewing distance. Below are three examples of hybrid image.
+            </p>
+    
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <img src="data/humancat.png" alt="Nutmeg and Derek Hybrid" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 5: Nutmeg and Derek</p>
+    
+                <img src="data/catdog.png" alt="Cat and Dog Hybrid with Frequency Analysis" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 6a: Cat and Dog</p>
+                <img src="data/frequency.png" alt="Cat and Dog Hybrid with Frequency Analysis" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 6b: Frequency analysis of Cat and Dog</p>
+    
+                <img src="data/bridges.png" alt="Day and Night Bridge Hybrid - Failed Attempt" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 7: Day and Night Golden Gate Bridge (Failed)</p>
+            </div>
+        </div>
+    </div>
+    <div class="example">
+        <div>
+            <p><strong>Part 2.3: Gaussian and Laplacian Stacks</strong></p>
+            <p>
+                In this part, Gaussian and Laplacian stacks are implemented, which are similar to pyramids but without downsampling. Unlike pyramids where each level becomes smaller at each level, stacks keeps the original dimension, such property allow further manipulation to result in multi-resolution blending. Below are some Laplacian stack visualizations.
+            </p>
+    
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <img src="data/laplacian.png" alt="Laplacian Stack Visualization" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figur 8: The Laplacian stack images for the apple, orange, and hybrid at levels 0, 2, and 4.</p>
+            </div>
+        </div>
+    </div>
+    <div class="example">
+        <div>
+            <p><strong>Part 2.4: Multiresolution Blending</strong></p>
+            <p>
+                In this part, we blend two images using Gaussian and Laplacian stacks. We start from creating Gaussian stacks for both input images, which are progressively blurred at each level. From these Gaussian stacks, Laplacian stacks are constructed to extract the details at each level. A mask which representing how the images will blend together is also applied with Gaussian stack to ensure a gradual transition between the two images. These Laplacian stacks are then combined using the Gaussian stack of the mask (for every level) to form a new blended Laplacian stack. In the end, the Laplacian stack is reconstructed to generate the blended image, resulting in a smooth blending. Below are some example blended images produced by this algorithm.
+            </p>
+    
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <img src="data/ice_volcano.png" alt="Multiresolution Blending Result" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 9: Blended result of the Himalayas and a volcano</p>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <img src="data/sproul_oski.png" alt="Multiresolution Blending Result" style="display: block; margin: 10px auto; width: 80%;">
+                <p class="image-description">Figure 10: Blended result of Sproul Hall and a Oski</p>
+            </div>
+        </div>
+    </div>
+    
+    
+</body>
+</html>
