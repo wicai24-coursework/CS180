@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>FA24 CS180 Project 3</title>
+    <link rel="icon" type="image/png" href="rgb.png">
+    <style>
+        a {
+            color: #4fd1c5;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #202123;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #10a37f;
+        }
+        h1 {
+            text-align: center; /* Align h1 to center */
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .example {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .example p {
+            font-size: 18px;
+            margin-right: 20px;
+            text-align: center;
+        }
+
+        .example img, .example gif {
+            max-width: 50%;
+            height: auto;
+            width: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .image-description {
+            color: #aaa;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse.
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: center.
+        }
+        th {
+            background-color: #10a37f;
+            color: #ffffff.
+        }
+        td img {
+            max-width: 150px.
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 3: Face Morphing</h1>
+    
+    <div class="example">
+        <div>
+            <p><strong>Part 1: Defining Correspondences</strong></p>
+            <p>
+                The first step is defining pairs of corresponding points on two images by hand. I created the correspondence points using <a href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html">this tool</a>. Then I compute the Delaunay triangulation on the averaged points to create a set of triangles used for morphing. The Delaunay Triangulation aims to minimizes skinny triangles, which could distort the morph.
+            </p>
+            <img src="data/part1.png" alt="Delaunay Triangulation Result">
+            <p class="image-description">Figure 1: Delaunay Triangulation on Keypoints</p>
+        </div>
+    </div>
+    
+    <div class="example">
+        <div>
+            <p><strong>Part 2: Computing the Mid-way Face</strong></p>
+            <p>
+                The mid-way face is created by averaging key points from both images, computing an affine transformation, and using inverse warping to align the images. The affine transformation matrix is calculated by solving a system of linear equations that map each triangle from the source image to the destination triangle. Then, the inverse warping is applied to interpolate pixel values from the original image to the new shape. This method ensures a smooth transformation from the source image into the average shape without looping over individual pixels.
+            </p>
+            <img src="data/part2.png" alt="Mid-way Face">
+            <p class="image-description">Figure 2: Mid-way Face between me and Mark Zuckerberg</p>
+        </div>
+    </div>
+
+    <div class="example">
+        <div>
+            <p><strong>Part 3: The Morph Sequence</strong></p>
+            <p>
+                A sequence of images is created by progressively interpolating the points and warping the shapes with different fractions of warp and dissolve. This technique blends both the shape and the appearance of the two faces into one morphing sequence. The triangulation is recomputed at each frame to ensure smooth transitions.
+            </p>
+            <img src="data/morph_sequence.gif" alt="Morph Sequence" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 3: Morph Sequence from me to Mark Zuckerberg</p>
+        </div>
+    </div>    
+
+    <div class="example">
+        <div>
+            <p><strong>Part 4: The "Mean Face" of a Population</strong></p>
+            <p>
+                Using a dataset of annotated faces, I computed the average face shape and warped each face into this mean shape. The mean shape is calculated by averaging the key points of all faces. Each face is then warped to the same Delaunay triangulation of average points.
+            </p>
+            <img src="data/1.png" alt="Face 1 Warped" style="display: block; margin: 10px auto; width: 80%;">
+            <img src="data/2.png" alt="Face 2 Warped" style="display: block; margin: 10px auto; width: 80%;">
+            <img src="data/2.png" alt="Face 2 Warped" style="display: block; margin: 10px auto; width: 80%;">
+            <img src="data/2.png" alt="Face 2 Warped" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 4: Examples of face warped into mean shape</p>
+    
+            <img src="data/part4.png" alt="Mean Face of Population" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 5: Mean Face of the Population</p>
+        </div>
+    </div>
+
+    <div class="example">
+        <div>
+            <p><strong>Part 5: Caricatures: Extrapolating From The Mean</strong></p>
+            <p>
+                Caricatures were created by exaggerating differences between my face and the population mean. The key points of my face were extrapolated away from the mean controlled by an alpha factor, effectively amplifying unique features of me. Same warping functions were used to apply these exaggerated points to my face.
+            </p>
+            <img src="data/alpha1.png" alt="Caricature Alpha = 1" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 6: Caricature with Alpha = 1</p>
+    
+            <img src="data/alpha2.png" alt="Caricature Alpha = 2.5" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 7: Caricature with Alpha = 2.5</p>
+        </div>
+    </div>
+    
+    <div class="example">
+        <div>
+            <p><strong>Changing Face Characteristics</strong></p>
+            <p>
+                I morphed my face with the average American female face by isolating shape and appearance morphing. Morphing the shape focuses on triangulation alone, while appearance morphing focuses on color. You can see the results of morphing both separately and combined below. The results is not optimal due to two faces occupy different area of the picture and inaccurate keypoints.
+            </p>
+            <img src="data/morphs.png" alt="Morphs Comparison Graph" style="display: block; margin: 10px auto; max-width: 90%; width: auto;">
+            <p class="image-description">Figure 11: Shape, Appearance, and Combined Morphs Comparison</p>
+            
+            <img src="data/morphs.gif" alt="Morph Sequence Comparison" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 12: Morph Sequence</p>
+        </div>
+    </div>
+    
+    <div class="example">
+        <div>
+            <p><strong>PCA-Based Face Transformations</strong></p>
+            <p>
+                Using PCA, I constructed a face space from the dataset, allowing transformations to occur in this lower-dimensional space (consturcted by the top 15 principal components). Caricatures were generated by exaggerating these principal components. Below is an example of a caricature generated in the PCA space with two different alphas, however the results is not comparable to those under normal basis.
+            </p>
+            <img src="data/PCA1.png" alt="PCA Caricature Alpha = 1.0" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 13: PCA Caricature with Alpha = 1.0</p>
+            
+            <img src="data/PCA2_5.png" alt="PCA Caricature Alpha = 2.5" style="display: block; margin: 10px auto; width: 80%;">
+            <p class="image-description">Figure 14: PCA Caricature with Alpha = 2.5</p>
+        </div>
+    </div>
+</body>
+</html>
