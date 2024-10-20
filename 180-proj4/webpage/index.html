@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>FA24 CS180 - Project 4: Auto-stitching and Photo Mosaics</title>
+    <link rel="icon" type="image/png" href="rgb.png">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        a {
+            color: #4fd1c5;
+            text-decoration: none;
+        }
+
+        a:link {
+            color: #10a37f;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #202123;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #10a37f;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .hidden-link {
+            color: #202123;
+            background-color: #202123;
+            text-decoration: none;
+        }
+
+        .hidden-link:hover {
+            color: #4fd1c5;
+            background-color: transparent;
+            text-decoration: underline;
+        }
+
+        .example {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .example p {
+            font-size: 18px;
+            margin-right: 20px;
+            text-align: center;
+        }
+
+        .example img {
+            max-width: 70%;
+            height: auto;
+            width: auto;
+            display: block;
+            margin: 10px auto;
+        }
+
+        .image-description {
+            color: #aaa;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        .example-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .example-row img {
+            max-width: 20%;
+            height: auto;
+            margin: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse.
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: center.
+        }
+        th {
+            background-color: #10a37f;
+            color: #ffffff.
+        }
+        td img {
+            max-width: 150px.
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 4: Stitching and Photo Mosaics</h1>
+
+    <h2>Part A: Image Warping and Mosaicing</h2>
+    
+    <div class="example">
+        <div>
+            <p id="top"><strong>Shooting and Digitizing Pictures</strong></p>
+            <p>
+                The first step in this project is to take multiple photographs with overlapping views. I took the pictures using my iPhone by rotating only along the camera axis.
+            </p>
+            
+            <div class="example-row">
+                <img src="data/im0.jpg" alt="Example Image 1">
+                <img src="data/im1.jpg" alt="Example Image 2">
+                <img src="data/im2.jpg" alt="Example Image 3">
+            </div>
+            <p class="image-description">Photographs taken at Cedar Street in North Berkeley</p>
+    
+            <div class="example-row">
+                <img src="data/room1.jpg" alt="Room Image 1">
+                <img src="data/room2.jpg" alt="Room Image 2">
+            </div>
+            <p class="image-description">Photographs taken in my room</p>
+    
+            <div class="example-row">
+                <img src="data/road1.jpg" alt="Road Image 1">
+                <img src="data/road2.jpg" alt="Road Image 2">
+                <img src="data/road3.jpg" alt="Road Image 3">
+            </div>
+            <p class="image-description">Images adopted from Google Street View</p>
+        </div>
+    </div>    
+    
+    <div class="example">
+        <div>
+            <p><strong>Recovering Homographies</strong></p>
+            <p>
+                To align overlapping images, we aim to find a homography matrix \( \mathbf{H} \) that allows us to relate the coordinates of one image to another. The homography matrix is a \( 3 \times 3 \) matrix that can be expressed as:
+
+                \[
+                \mathbf{H} = 
+                \begin{bmatrix}
+                h_1 & h_2 & h_3 \\
+                h_4 & h_5 & h_6 \\
+                h_7 & h_8 & 1
+                \end{bmatrix}
+                \]
+
+                It transforms a point \((x, y)\) in one image to a corresponding point \((x', y')\) in another image, using the following relationship in homogeneous coordinates:
+
+                \[
+                \begin{bmatrix}
+                x' \\
+                y' \\
+                w
+                \end{bmatrix}
+                = 
+                \mathbf{H} 
+                \begin{bmatrix}
+                x \\
+                y \\
+                1
+                \end{bmatrix}
+                \]
+
+                After applying this transformation, the coordinates are given by:
+
+                \[
+                x' = \frac{h_1 \cdot x + h_2 \cdot y + h_3}{h_7 \cdot x + h_8 \cdot y + 1}, \quad
+                y' = \frac{h_4 \cdot x + h_5 \cdot y + h_6}{h_7 \cdot x + h_8 \cdot y + 1}
+                \]
+
+                To find the entries of \( \mathbf{H} \), we use corresponding points \((x_i, y_i)\) and \((x_i', y_i')\) from two overlapping images. Each pair of points provides two linear equations, which are then combined to form a system of equations:
+
+                \[
+                \begin{aligned}
+                x_i' &= h_1 \cdot x_i + h_2 \cdot y_i + h_3 - h_7 \cdot x_i \cdot x_i' - h_8 \cdot y_i \cdot x_i', \\
+                y_i' &= h_4 \cdot x_i + h_5 \cdot y_i + h_6 - h_7 \cdot x_i \cdot y_i' - h_8 \cdot y_i \cdot y_i'
+                \end{aligned}
+                \]
+
+                We then set up a system of linear equations in the form \( \mathbf{A} \mathbf{h} = \mathbf{b} \), where \( \mathbf{h} \) is a vector of unknown entries \( h_1, h_2, \ldots, h_8 \). This system can be solved using a least-squares method.
+            </p>
+        </div>
+    </div>
+
+    <div class="example">
+        <div>
+            <p><strong>Warping the Images</strong></p>
+            <p>
+                Using the computed homography matrix \( \mathbf{H} \), we warp each image to ensure they are aligned. The warping is performed using inverse mapping, which calculates the source coordinates for each pixel after the transformation. This approach helps avoid aliasing issues and ensures accurate alignment.
+
+                The detailed approach involves computing the transformed coordinates of the image's corners to derive the output image's bounding box. We then construct a grid of points within this bounding box and apply the inverse homography matrix \( \mathbf{H}^{-1} \) to find the corresponding source coordinates. The pixel values at these source coordinates are interpolated to generate the final warped images.
+            </p>
+            <img src="data/rect1.png" alt="Rectified Image 1">
+            <img src="data/rect2.png" alt="Rectified Image 2">
+            <p class="image-description">Examples of rectified images</p>
+        </div>
+    </div>
+    
+    <div class="example">
+        <div>
+            <p><strong>Blending Images into a Mosaic</strong></p>
+            <p>
+                The final step for creating the mosaic is to blend the images. We combine the aligned images using weighted averaging and alpha masks for the overlapped areas to create smooth transitions and minimize visible seams.
+
+                The detailed approach is inspired by Alec Li's <a href="https://inst.eecs.berkeley.edu/~cs180/fa23/upload/files/proj4B/alec.li/">project work</a> from last year, which includes using distance transforms to determine the relative contribution of each image in overlapping regions. We also decompose the images into low-pass and high-pass components using a Gaussian filter. The low-pass components are combined using a weighted average, while the high-pass components are blended based on the distance transforms. This approach yields decent results using <a href="#top">original images</a>, as shown below.
+            </p>
+            <img src="data/mosaic1.png" alt="Mosaic Example 1">
+            <p class="image-description">Cedar Street</p>
+            <img src="data/mosaic2.png" alt="Mosaic Example 2">
+            <p class="image-description">My Room</p>
+            <img src="data/mosaic3.png" alt="Mosaic Example 3">
+            <p class="image-description">A mysterious Google Street View <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=-33.46580505371094%2C19.168420791625977&heading=0&pitch=0&fov=180&pano=yPdsNycgcONJXS4sBHj6Sw">location</a></p>
+        </div>
+    </div>
+</body>
+</html>
