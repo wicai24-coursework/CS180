@@ -86,7 +86,7 @@
         }
 
         .example-row img {
-            max-width: 20%;
+            max-width: 40%;
             height: auto;
             margin: 5px;
         }
@@ -226,5 +226,93 @@
             <p class="image-description">A mysterious Google Street View <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=-33.46580505371094%2C19.168420791625977&heading=0&pitch=0&fov=180&pano=yPdsNycgcONJXS4sBHj6Sw">location</a></p>
         </div>
     </div>
+    <h2>Part B: Auto-stitching using MOPS</h2>
+
+    <div class="example">
+        <div>
+            <p><strong>Harris Corner Detection and ANMS</strong></p>
+            <p>
+                We first detect Harris corners using code adapted from <a href="https://inst.eecs.berkeley.edu/~cs180/fa24/hw/proj4/harris.py">the course implementation</a> with an threshold_rel of 0.2 to ony keep the top corners. The Harris detector identifies corners as local peaks, which means it uses local gradient information to detect parts with significant intensity changes in multiple directions. Following <a href="https://inst.eecs.berkeley.edu/~cs180/fa24/hw/proj4/Papers/MOPS.pdf">the MOPS paper</a>, we then apply Adaptive Non-Maximal Suppression (ANMS) to select a better distributed set of corner points, where points are suppressed based on their corner strength relative to neighbors within a radius r. Note that all subsequent steps (feature descriptor extraction, matching, and outlier rejection) are implemented following the approaches described in this paper.
+            </p>
+            <img src="data/harris_corners.png" alt="Harris Corners">
+            <p class="image-description">Harris corners after ANMS showing good points distribution</p>
+        </div>
+    </div>
+
+<div class="example">
+    <div>
+        <p><strong>Feature Descriptor Extraction</strong></p>
+        <p>
+            For each point we get from ANMS, we extract a feature descriptor by sampling an 8×8 patch of normalized intensity values. As described in the paper, this sampling is performed from a larger 40×40 window to achieve better invariance. The descriptor \(d\) for each point is computed as:
+
+            \[
+            d = \frac{P - \mu}{\sigma}
+            \]
+
+            where P is the sampled patch, μ is the mean intensity, and σ is the standard deviation, and this normalization helps with invariance.
+        </p>
+        <img src="data/patch_extraction.png" alt="Feature Descriptor">
+        <p class="image-description">Example of feature patches</p>
+    </div>
+</div>
+
+<div class="example">
+    <div>
+        <p><strong>Feature Matching</strong></p>
+        <p>
+            Features are matched using Lowe's technique as described in Section 5 of the paper. For each feature in the first image, we find its two nearest neighbors in the second image based on Euclidean distance in descriptor space. A match is accepted only if:
+
+            \[
+            \frac{d_{1-NN}}{d_{2-NN}} < 0.8
+            \]
+
+            where \(d_{1-NN}\) is the distance to the closest match and \(d_{2-NN}\) is the distance to the second closest match, and the threshold was chosen empirically.
+        </p>
+        <img src="data/feature_matches.png" alt="Feature Matches">
+        <p class="image-description">Feature matches between image pairs</p>
+    </div>
+</div>
+
+<div class="example">
+    <div>
+        <p><strong>RANSAC</strong></p>
+        <p>
+            After obtaining feature matches, we use RANSAS to robustly estimate the homography while removing outlier matches. The algorithm iteratively selects random sets of four feature pairs to compute candidate homographies. For each candidate, it identifies inlier matches where the geometric transfer error is below a threshold. The homography with the largest set of inliers is selected, and a final refined homography is computed using all inlier matches. This makes feature matching more robust by eliminate incorrect matches, which provides a more accurate transformation for auto alignment.
+        </p>
+    </div>
+</div>
+
+<div class="example">
+    <div>
+        <p><strong>Automated vs Manual Stitching Results</strong></p>
+        <p>
+            We compare our autostitching implementation (which includes all the steps above) against manual point selection. Both methods use the same warping and blending techniques from Part A, differing only in how corresponding points are obtained. The automated approach outperforms the manual stitching which is more evident in the second example.
+        </p>
+        <div class="example-row">
+            <img src="data/mosaic1.png" alt="Manual Stitch 1">
+            <img src="data/auto_mosaic1.png" alt="Auto Stitch 1">
+        </div>
+        <p class="image-description">Cedar Street: Manual (left) vs Automated (right)</p>
+
+        <div class="example-row">
+            <img src="data/mosaic3.png" alt="Manual Stitch 2">
+            <img src="data/auto_mosaic2.png" alt="Auto Stitch 2">
+        </div>
+        <p class="image-description">Google Street View: Manual (left) vs Automated (right)</p>
+    </div>
+</div>
+
+<div class="example">
+    <div>
+        <p><strong>New images</strong></p>
+        <div class="example-row">
+            <img src="data/night0.jpg" alt="Original Image 1">
+            <img src="data/night1.jpg" alt="Original Image 2">
+        </div>
+        <p class="image-description">Cedar Street at Night: Original images (top) vs Autostitch (bottom) </p>
+        
+        <img src="data/auto_mosaic3.png" alt="Auto Stitch 3">
+    </div>
+</div>
 </body>
 </html>
